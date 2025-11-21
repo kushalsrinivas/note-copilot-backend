@@ -9,6 +9,9 @@
     "docker:up": "docker-compose up -d",
     "docker:down": "docker-compose down",
     "docker:logs": "docker-compose logs -f",
+    "docker:restart": "docker-compose restart",
+    "docker:clean": "docker-compose down -v",
+    "minio:console": "open http://localhost:9001 || xdg-open http://localhost:9001 || echo 'Open http://localhost:9001 in your browser'",
     "db:migrate": "node src/database/migrate.js"
   },
   "keywords": [

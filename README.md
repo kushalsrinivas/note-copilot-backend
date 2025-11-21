@@ -6,11 +6,11 @@ A Node.js backend API for Notes Copilot with PostgreSQL database and AWS S3 stor
 
 - **Express.js** REST API
 - **PostgreSQL** database with Sequelize ORM
-- **AWS S3** integration for audio file storage
-- **Docker** support for PostgreSQL
+- **MinIO** (S3-compatible) for local audio file storage
+- **Docker** support for PostgreSQL and MinIO
 - Organized MVC structure (Models, Controllers, Routes)
 - Error handling and validation middleware
-- File upload with Multer and S3
+- File upload with Multer and S3-compatible storage
 - Environment-based configuration
 - Health check endpoints
 
@@ -48,8 +48,9 @@ notes-copilot-backend/
 
 - Node.js (v16 or higher)
 - Docker and Docker Compose
-- AWS Account with S3 bucket
 - npm or yarn
+
+**Note:** No AWS account needed! We use MinIO for local S3-compatible storage.
 
 ## 📦 Installation
 
@@ -68,15 +69,23 @@ notes-copilot-backend/
    cp .env.example .env
    ```
    
-   Edit `.env` and configure:
-   - Database credentials
-   - AWS credentials and S3 bucket name
+   The `.env` file comes pre-configured for local development with MinIO.
+   You can customize:
+   - Database credentials (optional)
+   - MinIO credentials (optional)
    - Server port and other settings
 
-4. **Start PostgreSQL with Docker**
+4. **Start PostgreSQL and MinIO with Docker**
    ```bash
    npm run docker:up
    ```
+   
+   This will start:
+   - PostgreSQL on port 5432
+   - MinIO API on port 9000
+   - MinIO Console on port 9001 (Web UI: http://localhost:9001)
+   
+   MinIO will automatically create the `notes-copilot-audio` bucket.
 
 5. **Start the development server**
    ```bash
@@ -86,14 +95,18 @@ notes-copilot-backend/
 ## 🐳 Docker Commands
 
 ```bash
-# Start PostgreSQL container
+# Start all containers (PostgreSQL + MinIO)
 npm run docker:up
 
-# Stop PostgreSQL container
+# Stop all containers
 npm run docker:down
 
-# View PostgreSQL logs
+# View logs
 npm run docker:logs
+
+# Access MinIO Web Console
+# Open http://localhost:9001
+# Login: minioadmin / minioadmin
 ```
 
 ## 🔧 Environment Variables
@@ -112,11 +125,18 @@ Copy `.env.example` to `.env` and configure the following:
 - `DB_USER` - Database user
 - `DB_PASSWORD` - Database password
 
-### AWS S3 Configuration
-- `AWS_REGION` - AWS region
-- `AWS_ACCESS_KEY_ID` - AWS access key
-- `AWS_SECRET_ACCESS_KEY` - AWS secret key
-- `S3_BUCKET_NAME` - S3 bucket name
+### MinIO Configuration (Local S3)
+- `MINIO_ROOT_USER` - MinIO admin username (default: minioadmin)
+- `MINIO_ROOT_PASSWORD` - MinIO admin password (default: minioadmin)
+- `MINIO_PORT` - MinIO API port (default: 9000)
+- `MINIO_CONSOLE_PORT` - MinIO Console port (default: 9001)
+
+### S3 Configuration (MinIO-compatible)
+- `S3_ENDPOINT` - MinIO endpoint (default: http://localhost:9000)
+- `AWS_ACCESS_KEY_ID` - MinIO access key (same as MINIO_ROOT_USER)
+- `AWS_SECRET_ACCESS_KEY` - MinIO secret key (same as MINIO_ROOT_PASSWORD)
+- `AWS_REGION` - Region (default: us-east-1, can be any value for MinIO)
+- `S3_BUCKET_NAME` - Bucket name (default: notes-copilot-audio)
 
 ### Application Settings
 - `MAX_FILE_SIZE` - Maximum file size in bytes (default: 10MB)
@@ -145,15 +165,25 @@ In development mode, Sequelize will automatically sync the database schema when 
 
 ## 📤 File Upload
 
-The application uses Multer with S3 storage for handling audio file uploads.
+The application uses Multer with MinIO (S3-compatible) storage for handling audio file uploads.
 
-### S3 Utilities
+### MinIO Setup
+
+MinIO provides a local S3-compatible storage solution:
+- **API Endpoint**: http://localhost:9000
+- **Console**: http://localhost:9001
+- **Default Credentials**: minioadmin / minioadmin
+- **Bucket**: notes-copilot-audio (auto-created)
+
+### Storage Utilities
 
 The `src/config/s3.js` file provides:
-- `upload` - Multer middleware for file uploads
+- `upload` - Multer middleware for file uploads to MinIO
 - `getSignedUrl(key, expiresIn)` - Generate signed URLs for file downloads
-- `deleteFile(key)` - Delete files from S3
-- `checkBucketAccess()` - Verify S3 bucket accessibility
+- `deleteFile(key)` - Delete files from MinIO
+- `checkBucketAccess()` - Verify MinIO bucket accessibility
+
+All S3 SDK methods work seamlessly with MinIO!
 
 ## 🚦 Development
 
@@ -236,7 +266,8 @@ router.use('/notes', require('./notes'));
 - CORS configuration
 - Input validation with express-validator
 - File type and size restrictions
-- Private S3 objects with signed URLs
+- Private MinIO objects with signed URLs
+- Local storage (no external cloud dependencies)
 
 ## 📄 License
 

@@ -10,21 +10,23 @@ npm install
 # Copy the example environment file
 cp .env.example .env
 
-# Edit .env with your actual credentials
-# Required changes:
-# - AWS_ACCESS_KEY_ID
-# - AWS_SECRET_ACCESS_KEY
-# - S3_BUCKET_NAME
-# Optional: Adjust database credentials if needed
+# The .env file is pre-configured for local development with MinIO
+# No changes needed to get started!
+# Optional: Adjust database or MinIO credentials if desired
 ```
 
-## Step 3: Start PostgreSQL Database
+## Step 3: Start PostgreSQL and MinIO
 ```bash
-# Start PostgreSQL in Docker
+# Start PostgreSQL and MinIO in Docker
 npm run docker:up
 
-# Verify it's running
+# Verify containers are running
 docker ps
+
+# You should see:
+# - notes-copilot-postgres
+# - notes-copilot-minio
+# - notes-copilot-minio-init (will exit after creating bucket)
 ```
 
 ## Step 4: Start the Server
@@ -53,22 +55,29 @@ You should see JSON responses confirming the server is running!
 
 Now that your backend is initialized and running, you can:
 
-1. **Define your models** in `src/models/`
-2. **Create controllers** in `src/controllers/`
-3. **Add routes** in `src/routes/`
-4. **Configure your S3 bucket** in AWS console
+1. **Access MinIO Console**: http://localhost:9001 (minioadmin/minioadmin)
+2. **Define your models** in `src/models/`
+3. **Create controllers** in `src/controllers/`
+4. **Add routes** in `src/routes/`
+5. **Upload files** - they'll be stored in MinIO locally!
 
 ## 📋 Useful Commands
 
 ```bash
-# View PostgreSQL logs
+# View all container logs
 npm run docker:logs
 
-# Stop PostgreSQL
+# Stop all containers
 npm run docker:down
 
 # Access PostgreSQL CLI
 docker exec -it notes-copilot-postgres psql -U notesapp -d notes_copilot
+
+# Access MinIO Console (Web UI)
+open http://localhost:9001
+
+# Check MinIO bucket status
+docker exec notes-copilot-minio mc ls myminio/
 ```
 
 ## ⚠️ Troubleshooting
@@ -78,10 +87,12 @@ docker exec -it notes-copilot-postgres psql -U notesapp -d notes_copilot
 - Check if PostgreSQL container is running: `docker ps`
 - Verify .env database credentials match docker-compose.yml
 
-### S3 errors
-- Verify AWS credentials in .env
-- Ensure S3 bucket exists and is accessible
-- Check bucket region matches AWS_REGION in .env
+### MinIO/Storage errors
+- Check if MinIO container is running: `docker ps`
+- Access MinIO console: http://localhost:9001
+- Verify bucket exists in MinIO console
+- Check S3_ENDPOINT is set to http://localhost:9000
+- Ensure MINIO_ROOT_USER and MINIO_ROOT_PASSWORD match in .env
 
 ### Port already in use
 - Change PORT in .env to a different port

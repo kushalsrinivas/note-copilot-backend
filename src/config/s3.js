@@ -3,19 +3,25 @@ const multer = require('multer');
 const multerS3 = require('multer-s3');
 require('dotenv').config();
 
-// Configure AWS SDK
-AWS.config.update({
+// Configure AWS SDK for MinIO
+const s3Config = {
+  endpoint: process.env.S3_ENDPOINT || 'http://localhost:9000',
+  accessKeyId: process.env.AWS_ACCESS_KEY_ID || process.env.MINIO_ROOT_USER || 'minioadmin',
+  secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY || process.env.MINIO_ROOT_PASSWORD || 'minioadmin',
+  s3ForcePathStyle: true, // Required for MinIO
+  signatureVersion: 'v4',
   region: process.env.AWS_REGION || 'us-east-1',
-  accessKeyId: process.env.AWS_ACCESS_KEY_ID,
-  secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY,
-});
+};
 
-// Create S3 instance
+AWS.config.update(s3Config);
+
+// Create S3 instance (works with MinIO)
 const s3 = new AWS.S3({
   apiVersion: '2006-03-01',
-  ...(process.env.S3_ENDPOINT && { endpoint: process.env.S3_ENDPOINT }),
-  ...(process.env.S3_FORCE_PATH_STYLE === 'true' && { s3ForcePathStyle: true }),
+  ...s3Config,
 });
+
+console.log(`📦 S3 Client configured for: ${s3Config.endpoint}`);
 
 // Multer configuration for S3 uploads
 const upload = multer({
